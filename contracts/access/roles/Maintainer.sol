@@ -1,6 +1,6 @@
 pragma solidity <0.7.0;
 
-import "../roles.sol";
+import "../Roles.sol";
 
 contract Maintainer {
 	using Roles for Roles.Role;

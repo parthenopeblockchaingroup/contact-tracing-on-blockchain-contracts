@@ -1,7 +1,7 @@
 pragma solidity <0.7;
 
-import "./access/roles/maintainer.sol";
-import "./access/roles/whitelist/whitelisted.sol";
+import "./access/roles/Maintainer.sol";
+import "./access/roles/whitelist/Whitelisted.sol";
 
 contract ContactTracing is Maintainer, Whitelisted {
 	struct CuckooFilter {

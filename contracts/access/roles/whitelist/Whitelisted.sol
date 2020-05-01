@@ -1,7 +1,7 @@
 pragma solidity <0.7.0;
 
-import "../../roles.sol";
-import "./whitelist-admin.sol";
+import "../../Roles.sol";
+import "./WhitelistAdmin.sol";
 
 /**
  * @title Whitelisted
