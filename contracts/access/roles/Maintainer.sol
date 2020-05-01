@@ -1,8 +1,11 @@
 pragma solidity <0.7.0;
 
-import "../roles.sol";
+import "../../context/Context.sol";
 
-contract Maintainer {
+import "../Roles.sol";
+
+
+abstract contract Maintainer is Context {
 	using Roles for Roles.Role;
 
 	event MaintainerAdded(address indexed account);
@@ -11,12 +14,12 @@ contract Maintainer {
 	Roles.Role private _maintainer;
 
 	modifier onlyMaintainer() {
-		require(isMaintainer(msg.sender), "maintainer: caller does not have maintainer role");
+		require(isMaintainer(sender()), "maintainer: caller does not have maintainer role");
 		_;
 	}
 	
 	constructor() public {
-		_maintainer.add(msg.sender);
+		_maintainer.add(sender());
 	}
 
 	function isMaintainer(address account) public view returns(bool) {
@@ -32,7 +35,7 @@ contract Maintainer {
 	}
 
 	function renounceMaintainer() public {
-		_removeMaintainer(msg.sender);
+		_removeMaintainer(sender());
 	}
 
 	function _addMaintainer(address account) internal {

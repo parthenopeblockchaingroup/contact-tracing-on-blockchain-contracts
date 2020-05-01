@@ -1,9 +1,11 @@
 pragma solidity <0.7;
 
-import "./access/roles/maintainer.sol";
-import "./access/roles/whitelist/whitelisted.sol";
+import "./access/roles/Maintainer.sol";
+import "./access/roles/whitelist/Whitelisted.sol";
+import "./metacall/MetaCallable.sol";
+import "./context/MetaContext.sol";
 
-contract ContactTracing is Maintainer, Whitelisted {
+contract ContactTracing is MetaContext, MetaCallable, Maintainer, Whitelisted {
 	struct CuckooFilter {
 		uint16[4][] filter;
 		bool exist;
@@ -21,43 +23,43 @@ contract ContactTracing is Maintainer, Whitelisted {
 	event NewInfect(uint256 timestamp);
 
 	mapping(address => CuckooFilter) _filters;
-	mapping(address => Token) _tokens;
+	mapping(address => Token) public _tokens;
 
 	modifier onlyValidToken(bytes memory t) {
-		require(_tokens[msg.sender].status == TokenStatus.Active, "token: token inactive");
-		require(_tokens[msg.sender].hash == keccak256(t), "token: invalid token");
+		require(_tokens[sender()].status == TokenStatus.Active, "Token: token inactive");
+		require(_tokens[sender()].hash == keccak256(t), "Token: invalid token");
 		_;
 	}
 
 	modifier onlyIssuer(address a) {
-		require(_tokens[a].issuer == msg.sender, "token: caller is not the issuer for this token");
+		require(_tokens[a].issuer == sender(), "Token: caller is not the issuer for this token");
 		_;
 	}
-
+	
 	function submitToken(bytes32 h, address a) onlyWhitelisted external {
-		require(!_tokens[a].exist, "token: a token for the address already exist");
+		require(!_tokens[a].exist, "Token: a token for the address already exist");
 
-		_tokens[a] = Token(h, TokenStatus.Inactive, msg.sender, true);
+		_tokens[a] = Token(h, TokenStatus.Inactive, sender(), true);
 	}
 
 	function activateToken(address a) onlyIssuer(a) external {
-		require(_tokens[a].status == TokenStatus.Inactive, "token: token does not exist or is inactive");
+		require(_tokens[a].status == TokenStatus.Inactive, "Token: token does not exist or is inactive");
 
 		_tokens[a].status = TokenStatus.Active;
 	}
 
 	function submitCuckooFilter(bytes calldata t, uint16[4][] calldata filter) onlyValidToken(t) external {
-		require(_insertFilter(msg.sender, filter), "filter: already submitted!");
+		require(_insertFilter(sender(), filter), "Filter: already submitted!");
 
-		_tokens[msg.sender].status = TokenStatus.Consumed;
+		_tokens[sender()].status = TokenStatus.Consumed;
 	}
 
 	function filter(address a) external view returns(uint16[4][] memory) {
-		require(_filters[a].exist, "Filter not available for given address");
+		require(_filters[a].exist, "Filter: not available for given address");
 
 		return _filters[a].filter;
 	}
-
+	
 	function _insertFilter(address a, uint16[4][] memory f) internal returns(bool) { 
 		if(_filters[a].exist) return false;
 
